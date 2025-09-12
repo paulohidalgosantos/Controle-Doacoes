@@ -1,13 +1,10 @@
-# cadastro.pyw
-
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.graphics import Color, Rectangle
-from kivymd.uix.picker import MDDatePicker
-from constants import RED_WINE, WHITE, BACKGROUND, DEFAULT_PADDING, DEFAULT_SPACING, BUTTON_HEIGHT
+from constants import RED_WINE, WHITE, BACKGROUND, DEFAULT_PADDING, DEFAULT_SPACING
 import json
 import os
 from kivy.utils import platform
@@ -49,21 +46,11 @@ class TelaCadastro(Screen):
         self.input_endereco = TextInput(size_hint=(1, None), height=40, hint_text="Digite o endereço de retirada")
         layout.add_widget(self.input_endereco)
 
-        # Campo: Dia da Retirada (com calendário)
+        # Campo: Dia da Retirada
         layout.add_widget(Label(text="Dia da Retirada:", size_hint=(1, None), height=30))
-        self.input_dia = TextInput(size_hint=(1, None), height=40, hint_text="Clique no botão para escolher a data", readonly=True)
+        self.input_dia = TextInput(size_hint=(1, None), height=40, hint_text="DD/MM/AAAA")
+        self.input_dia.bind(text=self.formatar_data)
         layout.add_widget(self.input_dia)
-
-        btn_calendario = Button(
-            text="Selecionar Data",
-            size_hint=(1, None),
-            height=BUTTON_HEIGHT*300,  # ajusta tamanho proporcional
-            background_normal='',
-            background_color=RED_WINE,
-            color=WHITE
-        )
-        btn_calendario.bind(on_release=self.abrir_calendario)
-        layout.add_widget(btn_calendario)
 
         # Campo: Itens a serem retirados
         layout.add_widget(Label(text="Itens a serem retirados:", size_hint=(1, None), height=30))
@@ -96,16 +83,24 @@ class TelaCadastro(Screen):
 
         self.add_widget(layout)
 
-    def abrir_calendario(self, instance):
-        date_dialog = MDDatePicker(callback=self.selecionar_data)
-        date_dialog.open()
+    def formatar_data(self, instance, value):
+        cursor_pos = instance.cursor_index()
+        numeros = ''.join(filter(str.isdigit, value))[:8]  # DDMMYYYY
+        nova_data = ''
+        pos_cursor = cursor_pos
 
-    def selecionar_data(self, date_obj):
-        # Atualiza o TextInput com o formato DD/MM/AAAA
-        self.input_dia.text = date_obj.strftime("%d/%m/%Y")
+        for i, n in enumerate(numeros):
+            if i == 2 or i == 4:
+                nova_data += '/'
+                if cursor_pos > i:
+                    pos_cursor += 1
+            nova_data += n
+
+        instance.text = nova_data
+        pos_cursor = min(pos_cursor, len(nova_data))
+        instance.cursor = (pos_cursor, 0)
 
     def salvar_doacao(self, instance):
-        # Ler dados atuais do JSON
         if os.path.exists(self.arquivo_json):
             with open(self.arquivo_json, "r", encoding="utf-8") as f:
                 try:
@@ -115,7 +110,6 @@ class TelaCadastro(Screen):
         else:
             doacoes = []
 
-        # Nova doação
         nova_doacao = {
             "nome": self.input_nome.text,
             "endereco": self.input_endereco.text,
@@ -124,7 +118,6 @@ class TelaCadastro(Screen):
         }
         doacoes.append(nova_doacao)
 
-        # Salvar no arquivo JSON
         with open(self.arquivo_json, "w", encoding="utf-8") as f:
             json.dump(doacoes, f, ensure_ascii=False, indent=4)
 
