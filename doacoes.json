@@ -1,0 +1,14 @@
+[
+    {
+        "nome": "Paulo\t",
+        "endereco": "Antonio 55\t",
+        "dia": "28061995",
+        "itens": "roupa"
+    },
+    {
+        "nome": "teste\ttes",
+        "endereco": "teste",
+        "dia": "13092025",
+        "itens": "teste"
+    }
+]
